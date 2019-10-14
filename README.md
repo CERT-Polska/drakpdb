@@ -21,6 +21,6 @@ pip3 install -r requirements.txt
 
 2. Download PDB and parse it to a json profile 
    ```
-   python3 drakpdb.py fetch_pdb ntkrnlmp 3844dbb920174967be7aa4a2c20430fa2
-   python3 drakpdb.py parse_pdb ntkrnlmp > ntkrnlmp.json
+   python3 drakpdb.py fetch_pdb ntkrnlmp.pdb 3844dbb920174967be7aa4a2c20430fa2
+   python3 drakpdb.py parse_pdb ntkrnlmp.pdb > ntkrnlmp.json
    ```

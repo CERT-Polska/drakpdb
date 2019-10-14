@@ -166,7 +166,6 @@ def process_struct(struct_info):
 
 
 def make_pdb_profile(filepath):
-    filepath = filepath + ".pdb"
     pdb = pdbparse.parse(filepath)
 
     try:
@@ -185,9 +184,9 @@ def make_pdb_profile(filepath):
         for structName in pdb.STREAM_TPI.structures.keys()
     }
     for structName, structFields in struct_specs.items():
-        profile["$STRUCTS"][structName] = structFields
+        if structFields != [0, {}]:
+            profile["$STRUCTS"][structName] = structFields
 
-    profile.update({"$CONSTANTS": {}, "$FUNCTIONS": {}})
     mapped_syms = {"$CONSTANTS": {}, "$FUNCTIONS": {}}
 
     for sym in gsyms.globals:
@@ -245,7 +244,6 @@ def make_pdb_profile(filepath):
 
 
 def fetch_pdb(pdbname, guidage):
-    pdbname = pdbname + ".pdb"
     url = "https://msdl.microsoft.com/download/symbols/{}/{}/{}".format(pdbname, guidage.lower(), pdbname)
 
     try:
