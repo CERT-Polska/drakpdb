@@ -151,6 +151,37 @@ def get_field_type_info(field):
         return ["<unknown>", {}]
 
 
+def traverse_tree(ss, visited=None):
+    if visited is None:
+        visited = set()
+
+    for info in ss:
+        if not info.name or info.name in visited:
+            continue
+
+        yield info.name, process_struct(info)
+        visited.add(info.name)
+
+        try:
+            for struct in info.fieldlist.substructs:
+                try:
+                    yield from traverse_tree([struct.element_type], visited=visited)
+                except AttributeError as e:
+                    pass
+
+                try:
+                    yield from traverse_tree([struct.index], visited=visited)
+                except AttributeError as e:
+                    pass
+
+                try:
+                    yield from traverse_tree([struct.index.utype], visited=visited)
+                except AttributeError as e:
+                    pass
+        except AttributeError as e:
+            pass
+
+
 def process_struct(struct_info):
     ss = {}
 
@@ -179,10 +210,8 @@ def make_pdb_profile(filepath):
 
     gsyms = pdb.STREAM_GSYM
     profile = {"$FUNCTIONS": {}, "$CONSTANTS": {}, "$STRUCTS": {}}
-    struct_specs = {
-        structName: process_struct(pdb.STREAM_TPI.structures[structName])
-        for structName in pdb.STREAM_TPI.structures.keys()
-    }
+    struct_specs = {name: info for name, info in traverse_tree(pdb.STREAM_TPI.structures.values())}
+
     for structName, structFields in struct_specs.items():
         if structFields != [0, {}]:
             profile["$STRUCTS"][structName] = structFields
