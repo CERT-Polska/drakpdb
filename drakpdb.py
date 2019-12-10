@@ -143,7 +143,7 @@ class DummyOmap(object):
 
 def get_field_type_info(field):
     if isinstance(field.index, EnumIntegerString):
-        return TYPE_ENUM_TO_VTYPE[str(field.index)]
+        return TYPE_ENUM_TO_VTYPE.get(str(field.index), "<unknown>")
 
     try:
         return [field.index.name, {}]
