@@ -53,6 +53,7 @@ TYPE_ENUM_TO_VTYPE = {
     "T_USHORT": ["unsigned short", {}],
     "T_VOID": ["Void", {}],
     "T_WCHAR": ["UnicodeString", {}],
+    "T_HRESULT": ["long", {}],
 }
 
 class Demangler(object):
