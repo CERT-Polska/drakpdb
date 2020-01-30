@@ -31,6 +31,7 @@ pip3 install -r requirements.txt
 ### Generating profile from DLL
 
 1. Use [symchk.py from moyix/pdbparse](https://github.com/moyix/pdbparse/blob/master/examples/symchk.py) to obtain PDB
-2. ```
+2. Use:
+   ```
    python3 drakpdb.py parse_pdb dllname.pdb > dllname.json
    ```
