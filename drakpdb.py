@@ -54,7 +54,7 @@ TYPE_ENUM_TO_VTYPE = {
     "T_USHORT": ["unsigned short", {}],
     "T_VOID": ["Void", {}],
     "T_WCHAR": ["UnicodeString", {}],
-    "T_HRESULT": ["long", {}]
+    "T_HRESULT": ["long", {}],
 }
 
 class Demangler(object):
@@ -145,7 +145,7 @@ class DummyOmap(object):
 
 def get_field_type_info(field):
     if isinstance(field.index, EnumIntegerString):
-        return TYPE_ENUM_TO_VTYPE[str(field.index)]
+        return TYPE_ENUM_TO_VTYPE.get(str(field.index), "<unknown>")
 
     try:
         return [field.index.name, {}]
@@ -271,10 +271,10 @@ def make_pdb_profile(filepath):
         "Type": "Profile",
         "Version": pdb.STREAM_PDB.Version
     }
-    return json.dumps(profile, indent=4, sort_keys=True)
+    print(json.dumps(profile, indent=4, sort_keys=True))
 
 
-def fetch_pdb(pdbname, guidage, destdir='.'):
+def fetch_pdb(pdbname, guidage):
     url = "https://msdl.microsoft.com/download/symbols/{}/{}/{}".format(pdbname, guidage.lower(), pdbname)
 
     try:
@@ -290,11 +290,11 @@ def fetch_pdb(pdbname, guidage, destdir='.'):
                             f.write(chunk)
                             pbar.update(len(chunk))
 
-        return dest
+        return True
     except HTTPError as e:
         print("Failed to download from: {}, reason: {}".format(url, str(e)))
 
-    raise RuntimeError("Failed to fetch PDB")
+    return False
 
 
 if __name__ == "__main__":
@@ -306,7 +306,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.action == "parse_pdb":
-        print(make_pdb_profile(args.pdb_name))
+        make_pdb_profile(args.pdb_name)
     elif args.action == "fetch_pdb":
         fetch_pdb(args.pdb_name, args.guid_age)
     else:
