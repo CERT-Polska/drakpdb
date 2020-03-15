@@ -8,6 +8,7 @@ import json
 import requests
 from construct import EnumIntegerString
 from requests import HTTPError
+from tqdm import tqdm
 
 
 # Derived from rekall
@@ -53,7 +54,7 @@ TYPE_ENUM_TO_VTYPE = {
     "T_USHORT": ["unsigned short", {}],
     "T_VOID": ["Void", {}],
     "T_WCHAR": ["UnicodeString", {}],
-    "T_HRESULT": ["long", {}],
+    "T_HRESULT": ["long", {}]
 }
 
 class Demangler(object):
@@ -144,7 +145,7 @@ class DummyOmap(object):
 
 def get_field_type_info(field):
     if isinstance(field.index, EnumIntegerString):
-        return TYPE_ENUM_TO_VTYPE.get(str(field.index), "<unknown>")
+        return TYPE_ENUM_TO_VTYPE[str(field.index)]
 
     try:
         return [field.index.name, {}]
@@ -270,26 +271,30 @@ def make_pdb_profile(filepath):
         "Type": "Profile",
         "Version": pdb.STREAM_PDB.Version
     }
-    print(json.dumps(profile, indent=4, sort_keys=True))
+    return json.dumps(profile, indent=4, sort_keys=True)
 
 
-def fetch_pdb(pdbname, guidage):
+def fetch_pdb(pdbname, guidage, destdir='.'):
     url = "https://msdl.microsoft.com/download/symbols/{}/{}/{}".format(pdbname, guidage.lower(), pdbname)
 
     try:
         with requests.get(url, stream=True) as res:
             res.raise_for_status()
+            total_size = int(res.headers.get('content-length', 0))
+            dest = os.path.join(destdir, os.path.basename(pdbname))
 
-            with open(os.path.basename(pdbname), "wb") as f:
-                for chunk in res.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
+            with tqdm(total=total_size, unit='iB', unit_scale=True) as pbar:
+                with open(dest, "wb") as f:
+                    for chunk in res.iter_content(chunk_size=1024 * 8):
+                        if chunk:
+                            f.write(chunk)
+                            pbar.update(len(chunk))
 
-        return True
+        return dest
     except HTTPError as e:
         print("Failed to download from: {}, reason: {}".format(url, str(e)))
 
-    return False
+    raise RuntimeError("Failed to fetch PDB")
 
 
 if __name__ == "__main__":
@@ -301,7 +306,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.action == "parse_pdb":
-        make_pdb_profile(args.pdb_name)
+        print(make_pdb_profile(args.pdb_name))
     elif args.action == "fetch_pdb":
         fetch_pdb(args.pdb_name, args.guid_age)
     else:
