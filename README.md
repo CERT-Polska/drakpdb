@@ -1,6 +1,6 @@
 # drakpdb
 
-Helper program to generate [DRAKVUF](https://github.com/tklengyel/drakvuf) profiles.
+Helper library to generate [DRAKVUF](https://github.com/tklengyel/drakvuf) profiles.
 
 ## Installation
 
