@@ -4,25 +4,12 @@ import re
 from typing import Union
 
 import pefile
-import requests
-from construct import Bytes, Const, CString, EnumIntegerString, Int16ul, Int32ul, Struct
+from construct import EnumIntegerString
 from construct.lib.containers import Container
-from requests import HTTPError
-from tqdm import tqdm
-from . import pdbparse
 
-CV_RSDS_HEADER = "CV_RSDS" / Struct(
-    "Signature" / Const(b"RSDS", Bytes(4)),
-    "GUID"
-    / Struct(
-        "Data1" / Int32ul,
-        "Data2" / Int16ul,
-        "Data3" / Int16ul,
-        "Data4" / Bytes(8),
-    ),
-    "Age" / Int32ul,
-    "Filename" / CString(encoding="utf8"),
-)
+from .pdbparse.dbgold import CV_RSDS_HEADER
+from .pdbparse.symlookup import DummyOmap
+from . import pdbparse
 
 
 # Derived from rekall
@@ -166,11 +153,6 @@ class Demangler(object):
             return self._UnpackMangledString(mangled_name)
 
         return mangled_name
-
-
-class DummyOmap(object):
-    def remap(self, addr):
-        return addr
 
 
 def get_field_type_info(field):
@@ -344,31 +326,6 @@ def make_pdb_profile(
             pass
 
     return json.dumps(profile, indent=4, sort_keys=True)
-
-
-def fetch_pdb(pdbname, guidage, destdir="."):
-    url = "https://msdl.microsoft.com/download/symbols/{}/{}/{}".format(
-        pdbname, guidage.lower(), pdbname
-    )
-
-    try:
-        with requests.get(url, stream=True) as res:
-            res.raise_for_status()
-            total_size = int(res.headers.get("content-length", 0))
-            dest = os.path.join(destdir, os.path.basename(pdbname))
-
-            with tqdm(total=total_size, unit="iB", unit_scale=True) as pbar:
-                with open(dest, "wb") as f:
-                    for chunk in res.iter_content(chunk_size=1024 * 8):
-                        if chunk:
-                            f.write(chunk)
-                            pbar.update(len(chunk))
-
-        return dest
-    except HTTPError as e:
-        print("Failed to download from: {}, reason: {}".format(url, str(e)))
-
-    raise RuntimeError("Failed to fetch PDB")
 
 
 def pe_codeview_data(filepath):

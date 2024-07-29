@@ -1,6 +1,7 @@
 import argparse
 
-from .drakpdb import make_pdb_profile, fetch_pdb, pe_codeview_data
+from .drakpdb import make_pdb_profile, pe_codeview_data
+from .fetch_pdb import fetch_pdb
 
 def main():
     parser = argparse.ArgumentParser(description='drakpdb')
@@ -11,7 +12,7 @@ def main():
     args = parser.parse_args()
 
     if args.action == "parse_pdb":
-        make_pdb_profile(args.pdb_name)
+        print(make_pdb_profile(args.pdb_name))
     elif args.action == "fetch_pdb":
         fetch_pdb(args.pdb_name, args.guid_age)
     elif args.action == "pe_codeview_data":
