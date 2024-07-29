@@ -4,68 +4,12 @@ import re
 from typing import Union
 
 import pefile
-from construct import EnumIntegerString
 from construct.lib.containers import Container
 
 from .pdbparse.dbgold import CV_RSDS_HEADER
 from .pdbparse.symlookup import DummyOmap
 from . import pdbparse
-
-
-# Derived from rekall
-TYPE_ENUM_TO_VTYPE = {
-    "T_32PINT4": ["Pointer", dict(target="long")],
-    "T_32PLONG": ["Pointer", dict(target="long")],
-    "T_32PQUAD": ["Pointer", dict(target="long long")],
-    "T_32PRCHAR": ["Pointer", dict(target="unsigned char")],
-    "T_32PREAL32": ["Pointer", dict(target="Void")],
-    "T_32PREAL64": ["Pointer", dict(target="Void")],
-    "T_32PSHORT": ["Pointer", dict(target="short")],
-    "T_32PUCHAR": ["Pointer", dict(target="unsigned char")],
-    "T_32PUINT4": ["Pointer", dict(target="unsigned int")],
-    "T_32PULONG": ["Pointer", dict(target="unsigned long")],
-    "T_32PUQUAD": ["Pointer", dict(target="unsigned long long")],
-    "T_32PUSHORT": ["Pointer", dict(target="unsigned short")],
-    "T_32PVOID": ["Pointer", dict(target="Void")],
-    "T_32PWCHAR": ["Pointer", dict(target="UnicodeString")],
-    "T_32PHRESULT": ["Pointer", dict(target="long")],
-    "T_64PINT4": ["Pointer", dict(target="long")],
-    "T_64PLONG": ["Pointer", dict(target="long")],
-    "T_64PQUAD": ["Pointer", dict(target="long long")],
-    "T_64PSHORT": ["Pointer", dict(target="short")],
-    "T_64PRCHAR": ["Pointer", dict(target="unsigned char")],
-    "T_64PUCHAR": ["Pointer", dict(target="unsigned char")],
-    "T_64PCHAR": ["Pointer", dict(target="char")],
-    "T_64PWCHAR": ["Pointer", dict(target="String")],
-    "T_64PULONG": ["Pointer", dict(target="unsigned long")],
-    "T_64PUQUAD": ["Pointer", dict(target="unsigned long long")],
-    "T_64PUSHORT": ["Pointer", dict(target="unsigned short")],
-    "T_64PVOID": ["Pointer", dict(target="Void")],
-    "T_64PREAL32": ["Pointer", dict(target="float")],
-    "T_64PREAL64": ["Pointer", dict(target="double")],
-    "T_64PUINT4": ["Pointer", dict(target="unsigned int")],
-    "T_64PHRESULT": ["Pointer", dict(target="long")],
-    "T_BOOL08": ["unsigned char", {}],
-    "T_CHAR": ["char", {}],
-    "T_INT4": ["long", {}],
-    "T_INT8": ["long long", {}],
-    "T_LONG": ["long", {}],
-    "T_QUAD": ["long long", {}],
-    "T_RCHAR": ["unsigned char", {}],
-    "T_REAL32": ["float", {}],
-    "T_REAL64": ["double", {}],
-    "T_REAL80": ["long double", {}],
-    "T_SHORT": ["short", {}],
-    "T_UCHAR": ["unsigned char", {}],
-    "T_UINT4": ["unsigned long", {}],
-    "T_UINT8": ["unsigned long long", {}],
-    "T_ULONG": ["unsigned long", {}],
-    "T_UQUAD": ["unsigned long long", {}],
-    "T_USHORT": ["unsigned short", {}],
-    "T_VOID": ["Void", {}],
-    "T_WCHAR": ["UnicodeString", {}],
-    "T_HRESULT": ["long", {}],
-}
+from .type_info import process_tpi
 
 
 class Demangler(object):
@@ -155,67 +99,6 @@ class Demangler(object):
         return mangled_name
 
 
-def get_field_type_info(field):
-    if isinstance(field.index, EnumIntegerString):
-        return TYPE_ENUM_TO_VTYPE[str(field.index)]
-
-    try:
-        return [field.index.name, {}]
-    except AttributeError:
-        return ["<unknown>", {}]
-
-
-def traverse_tree(ss, visited=None):
-    if visited is None:
-        visited = set()
-
-    for info in ss:
-        if not info.name or info.name in visited:
-            continue
-
-        yield info.name, process_struct(info)
-        visited.add(info.name)
-
-        try:
-            for struct in info.fieldlist.substructs:
-                try:
-                    yield from traverse_tree([struct.element_type], visited=visited)
-                except AttributeError:
-                    pass
-
-                try:
-                    yield from traverse_tree([struct.index], visited=visited)
-                except AttributeError:
-                    pass
-
-                try:
-                    yield from traverse_tree([struct.index.utype], visited=visited)
-                except AttributeError:
-                    pass
-        except AttributeError:
-            pass
-
-
-def process_struct(struct_info):
-    ss = {}
-
-    try:
-        for struct in struct_info.fieldlist.substructs:
-            # try to access struct.offset and trigger
-            # an AttributeError if it's missing
-            _ = struct.offset
-            ss[struct.name] = struct
-    except AttributeError:
-        pass
-
-    field_info = {}
-    for name, field in ss.items():
-        typ = get_field_type_info(field)
-        field_info[name] = (field.offset, typ)
-
-    return [struct_info.size, field_info]
-
-
 def make_symstore_hash(
     codeview_struct: Union[Container, pdbparse.PDBInfoStream]
 ) -> str:
@@ -247,15 +130,8 @@ def make_pdb_profile(
         omap = DummyOmap()
 
     gsyms = pdb.STREAM_GSYM
-    profile = {"$FUNCTIONS": {}, "$CONSTANTS": {}, "$STRUCTS": {}}
-    struct_specs = {
-        name: info for name, info in traverse_tree(pdb.STREAM_TPI.structures.values())
-    }
-
-    for structName, structFields in struct_specs.items():
-        if structFields != [0, {}]:
-            profile["$STRUCTS"][structName] = structFields
-
+    tpi = process_tpi(pdb)
+    profile = {"$FUNCTIONS": {}, "$CONSTANTS": {}, **tpi}
     mapped_syms = {"$CONSTANTS": {}, "$FUNCTIONS": {}}
 
     for sym in gsyms.globals:
