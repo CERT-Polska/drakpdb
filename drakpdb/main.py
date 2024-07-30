@@ -3,11 +3,14 @@ import argparse
 from .drakpdb import make_pdb_profile, pe_codeview_data
 from .fetch_pdb import fetch_pdb
 
+
 def main():
-    parser = argparse.ArgumentParser(description='drakpdb')
-    parser.add_argument('action', type=str, help='one of: fetch_pdb, parse_pdb')
-    parser.add_argument('pdb_name', type=str, help='name of pdb file without extension, e.g. ntkrnlmp')
-    parser.add_argument('guid_age', nargs='?', help='guid/age of the pdb file')
+    parser = argparse.ArgumentParser(description="drakpdb")
+    parser.add_argument("action", type=str, help="one of: fetch_pdb, parse_pdb")
+    parser.add_argument(
+        "pdb_name", type=str, help="name of pdb file without extension, e.g. ntkrnlmp"
+    )
+    parser.add_argument("guid_age", nargs="?", help="guid/age of the pdb file")
 
     args = parser.parse_args()
 
@@ -18,4 +21,4 @@ def main():
     elif args.action == "pe_codeview_data":
         print(pe_codeview_data(args.file))
     else:
-        raise RuntimeError('Unknown action')
+        raise RuntimeError("Unknown action")

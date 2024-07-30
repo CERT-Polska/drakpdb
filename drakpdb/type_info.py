@@ -61,20 +61,17 @@ def process_structure_reference(member):
 
 
 def process_pointer(member):
-    return [
-        "Pointer", {
-            **process_base_type_info(member.utype)
-        }
-    ]
+    return ["Pointer", {**process_base_type_info(member.utype)}]
 
 
 def process_bitfield(member):
     return [
-        "BitField", {
+        "BitField",
+        {
             "start_bit": member.position,
             "end_bit": member.position + member.length,
-            **process_base_type_info(member.base_type)
-        }
+            **process_base_type_info(member.base_type),
+        },
     ]
 
 
@@ -88,16 +85,20 @@ def process_base_type_info(node):
 
 def process_member_type(member_type):
     if isinstance(member_type, EnumIntegerString):
-        return TYPE_ENUM_TO_VTYPE.get(member_type, f"<unknown>")
-    # TODO: Right now we don't handle LF_ARRAY, LF_ENUM, nested unnamed struct/unions etc
+        return TYPE_ENUM_TO_VTYPE.get(member_type, "<unknown>")
+    # TODO: Right now we don't handle LF_ARRAY, LF_ENUM,
+    #       nested unnamed struct/unions etc
     complex_leaf_types = {
         "LF_STRUCTURE": process_structure_reference,
         "LF_UNION": process_structure_reference,
         "LF_BITFIELD": process_bitfield,
         "LF_POINTER": process_pointer,
     }
-    if not hasattr(member_type, "leaf_type") or member_type.leaf_type not in complex_leaf_types:
-        return [f"<unknown>", {}]
+    if (
+        not hasattr(member_type, "leaf_type")
+        or member_type.leaf_type not in complex_leaf_types
+    ):
+        return ["<unknown>", {}]
     return complex_leaf_types[member_type.leaf_type](member_type)
 
 
@@ -113,10 +114,11 @@ def process_structure(struct):
         # Usually T_NOTYPE
         return [0, {}]
     return [
-        struct.size, {
+        struct.size,
+        {
             member.name: process_structure_member(member)
             for member in struct.fieldlist.substructs
-        }
+        },
     ]
 
 
@@ -126,6 +128,7 @@ def process_tpi(pdb):
     """
     return {
         "$STRUCTS": {
-            name: process_structure(structure) for name, structure in pdb.STREAM_TPI.structures.items()
+            name: process_structure(structure)
+            for name, structure in pdb.STREAM_TPI.structures.items()
         }
     }

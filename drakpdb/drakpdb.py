@@ -6,17 +6,17 @@ from typing import Union
 import pefile
 from construct.lib.containers import Container
 
+from . import pdbparse
 from .pdbparse.dbgold import CV_RSDS_HEADER
 from .pdbparse.symlookup import DummyOmap
-from . import pdbparse
 from .type_info import process_tpi
 
 
 class Demangler(object):
     """A utility class to demangle VC++ names.
 
-    This is not a complete or accurate demangler, it simply extract the name and
-    strips out args etc.
+    This is not a complete or accurate demangler, it simply extract the name
+    and strips out args etc.
 
     Ref:
     http://www.kegel.com/mangle.html
@@ -103,7 +103,8 @@ def make_symstore_hash(
     codeview_struct: Union[Container, pdbparse.PDBInfoStream]
 ) -> str:
     """
-    If `codeview_struct` is an instance of Container, it should be returned from `CV_RSDS_HEADER.parse()`.
+    If `codeview_struct` is an instance of Container, it should be returned from
+    `CV_RSDS_HEADER.parse()`.
     """
     guid = codeview_struct.GUID
     guid_str = "%08x%04x%04x%s" % (
