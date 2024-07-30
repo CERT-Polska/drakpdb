@@ -118,6 +118,7 @@ def process_structure(struct):
         {
             member.name: process_structure_member(member)
             for member in struct.fieldlist.substructs
+            if member.leaf_type == "LF_MEMBER"
         },
     ]
 
