@@ -89,6 +89,7 @@ def process_base_type_info(node):
 def process_member_type(member_type):
     if isinstance(member_type, EnumIntegerString):
         return TYPE_ENUM_TO_VTYPE.get(member_type, f"<unknown>")
+    # TODO: Right now we don't handle LF_ARRAY, LF_ENUM, nested unnamed struct/unions etc
     complex_leaf_types = {
         "LF_STRUCTURE": process_structure_reference,
         "LF_UNION": process_structure_reference,
@@ -101,7 +102,7 @@ def process_member_type(member_type):
 
 
 def process_structure_member(member):
-   return process_member_type(member.index)
+    return process_member_type(member.index)
 
 
 def process_structure(struct):
