@@ -1,4 +1,3 @@
-import json
 import os
 import re
 from typing import Union
@@ -202,7 +201,7 @@ def make_pdb_profile(
             # always present. Ignore this error if it happens
             pass
 
-    return json.dumps(profile, indent=4, sort_keys=True)
+    return profile
 
 
 def pe_codeview_data(filepath):

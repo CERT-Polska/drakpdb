@@ -1,4 +1,5 @@
 import argparse
+import json
 
 from .drakpdb import make_pdb_profile, pe_codeview_data
 from .fetch_pdb import fetch_pdb
@@ -15,7 +16,8 @@ def main():
     args = parser.parse_args()
 
     if args.action == "parse_pdb":
-        print(make_pdb_profile(args.pdb_name))
+        profile = make_pdb_profile(args.pdb_name)
+        print(json.dumps(profile, indent=4))
     elif args.action == "fetch_pdb":
         fetch_pdb(args.pdb_name, args.guid_age)
     elif args.action == "pe_codeview_data":
