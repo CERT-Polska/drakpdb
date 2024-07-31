@@ -16,7 +16,9 @@ jobs:
       with:
         python-version: 3.8
     - name: Build source distribution
-      run: python3 setup.py sdist
+      run: |
+        pip install -U setuptools
+        python3 setup.py sdist
     - name: Build wheel distribution
       run: |
         pip install cibuildwheel==2.19.2
