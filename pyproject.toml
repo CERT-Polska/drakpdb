@@ -19,6 +19,7 @@ dependencies = [
     "requests>2.32.2",
     "tqdm",
 ]
+requires-python = ">=3.8"
 
 [project.scripts]
 drakpdb = "drakpdb.main:main"
