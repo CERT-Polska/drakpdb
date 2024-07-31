@@ -25,4 +25,19 @@ jobs:
           python-version: 3.8
           cache: 'pip'
       - run: pip install . -r tests/requirements.txt
+      - uses: actions/cache/restore@v4
+        id: cache-pdbs-restore
+        with:
+          path: |
+            tests/pdbs/*.pdb
+          key: pdbs-${{ hashFiles('tests/pdbs/pdbs.toml') }}
+      - if: ${{ steps.cache-pdbs-restore.outputs.cache-hit != 'true' }}
+        name: Download PDBs for test
+        run: python tests/fetch_pdbs.py
+      - if: ${{ steps.cache-pdbs-restore.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            tests/pdbs/*.pdb
+          key: pdbs-${{ hashFiles('tests/pdbs/pdbs.toml') }}
       - run: pytest
