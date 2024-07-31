@@ -1,0 +1,43 @@
+name: "Lint and test drakpdb"
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: CERT-Polska/lint-python-action@v2
+        with:
+          install-requirements: false
+          python-version: 3.8
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.8
+          cache: 'pip'
+      - run: pip install . -r tests/requirements.txt
+      - uses: actions/cache/restore@v4
+        id: cache-pdbs-restore
+        with:
+          path: |
+            tests/pdbs/*.pdb
+          key: pdbs-${{ hashFiles('tests/pdbs/pdbs.toml') }}
+      - if: ${{ steps.cache-pdbs-restore.outputs.cache-hit != 'true' }}
+        name: Download PDBs for test
+        run: python tests/fetch_pdbs.py
+      - if: ${{ steps.cache-pdbs-restore.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            tests/pdbs/*.pdb
+          key: pdbs-${{ hashFiles('tests/pdbs/pdbs.toml') }}
+      - run: pytest
