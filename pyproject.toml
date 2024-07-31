@@ -24,7 +24,7 @@ dependencies = [
 drakpdb = "drakpdb.main:main"
 
 [tool.setuptools]
-packages = ["drakpdb", "drakpdb.pdbparse"]
+packages = ["drakpdb", "drakpdb.pdbparse", "drakpdb.pdbparse._undname"]
 
 [tool.black]
 exclude = "drakpdb/pdbparse/*"
