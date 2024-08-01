@@ -107,7 +107,7 @@ def process_structure_member(member):
 
 
 def process_structure(struct):
-    if struct.leaf_type != "LF_STRUCTURE":
+    if struct.leaf_type not in ["LF_STRUCTURE", "LF_UNION"]:
         # Unhandled type of structure
         return [0, {}]
     if not hasattr(struct.fieldlist, "substructs"):
@@ -129,7 +129,8 @@ def process_tpi(pdb):
     """
     return {
         "$STRUCTS": {
-            name: process_structure(structure)
-            for name, structure in pdb.STREAM_TPI.structures.items()
+            type_info.name: process_structure(type_info)
+            for type_info in pdb.STREAM_TPI.types.values()
+            if hasattr(type_info, "name")
         }
     }
