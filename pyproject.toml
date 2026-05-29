@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "drakpdb"
-version = "0.2.1"
+version = "0.2.3"
 description = "Helper library to generate DRAKVUF profiles."
 readme = "README.md"
 classifiers = [
@@ -14,9 +14,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dependencies = [
-    "pefile>2019.4.18",
+    "pefile>=2019.4.18",
     "construct<3.0",
-    "requests>2.32.2",
+    "requests",
     "tqdm",
 ]
 requires-python = ">=3.8"
