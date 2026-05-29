@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "drakpdb"
-version = "0.2.0"
+version = "0.2.1"
 description = "Helper library to generate DRAKVUF profiles."
 readme = "README.md"
 classifiers = [
